@@ -1,2 +1,2 @@
 # TetrisGameServer
-tetris battle game server
+Tetris battle game server
