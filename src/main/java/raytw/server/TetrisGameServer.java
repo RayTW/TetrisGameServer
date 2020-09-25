@@ -4,12 +4,74 @@
 
 package raytw.server;
 
+import io.jpower.kcp.netty.ChannelOptionHelper;
+import io.jpower.kcp.netty.UkcpChannel;
+import io.jpower.kcp.netty.UkcpChannelOption;
+import io.jpower.kcp.netty.UkcpServerChannel;
+import io.netty.bootstrap.UkcpServerBootstrap;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import java.util.concurrent.TimeUnit;
 import org.apache.log4j.PropertyConfigurator;
+import org.json.JSONObject;
 
-public class TetrisGameServer {
-  public boolean someLibraryMethod() {
-    return true;
+public class TetrisGameServer implements CmdProcListener {
+  private static final int CONV = Integer.parseInt(System.getProperty("conv", "10"));
+  private static final int PORT = Integer.parseInt(System.getProperty("port", "8009"));
+
+  public void start() throws InterruptedException {
+    // Configure the server.
+    EventLoopGroup group = new NioEventLoopGroup();
+    try {
+      UkcpServerBootstrap b = new UkcpServerBootstrap();
+      b.group(group)
+          .channel(UkcpServerChannel.class)
+          .childHandler(
+              new ChannelInitializer<UkcpChannel>() {
+                @Override
+                public void initChannel(UkcpChannel ch) throws Exception {
+                  ChannelPipeline p = ch.pipeline();
+                  p.addLast(new KcpRttServerHandler(CONV, TetrisGameServer.this));
+                }
+              });
+      ChannelOptionHelper.nodelay(b, true, 20, 2, true)
+          .childOption(UkcpChannelOption.UKCP_MTU, 512);
+
+      // Start the server.
+      ChannelFuture f = b.bind(PORT).sync();
+
+      // Wait until the server socket is closed.
+      f.channel().closeFuture().sync();
+    } finally {
+      // Shut down all event loops to terminate all threads.
+      group.shutdownGracefully();
+    }
+  }
+
+  @Override
+  public void offline(User user) { // TODO Auto-generated method stub
+  }
+
+  // TODO test
+  private Room room = new Room();
+
+  @Override
+  public void onReadCommand(User user, CharSequence str) { // TODO Auto-generated method stub
+    JSONObject json = new JSONObject(str);
+    int code = json.getInt("code");
+
+    if (code == 1) {
+      user.setName(json.getString("name"));
+      room.addUser(user);
+      return;
+    }
+
+    if (code == 100) {
+      room.boradcast(json.getInt("keycode"));
+    }
   }
 
   /**
@@ -19,20 +81,24 @@ public class TetrisGameServer {
    */
   public static void main(String[] args) {
     PropertyConfigurator.configure("config//log4j.properties");
+    //    startClient();
     try {
-      new Thread(TetrisGameServer::startClient).start();
-      KcpRttServer.main(args);
-    } catch (Exception e) {
+      new TetrisGameServer().start();
+    } catch (InterruptedException e) {
       e.printStackTrace();
     }
   }
 
   private static void startClient() {
-    try {
-      TimeUnit.SECONDS.sleep(1);
-      KcpRttClient.main(null);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+    Runnable r =
+        () -> {
+          try {
+            TimeUnit.SECONDS.sleep(1);
+            KcpRttClient.main(null);
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        };
+    for (int i = 0; i < 3; i++) new Thread(r).start();
   }
 }
