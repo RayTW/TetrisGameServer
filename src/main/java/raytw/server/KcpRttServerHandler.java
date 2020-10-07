@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelId;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import java.nio.charset.StandardCharsets;
+import raytw.util.Debug;
 
 public class KcpRttServerHandler extends ChannelInboundHandlerAdapter {
   private CmdProcListener listener;
@@ -20,19 +21,19 @@ public class KcpRttServerHandler extends ChannelInboundHandlerAdapter {
   public void channelActive(ChannelHandlerContext ctx) throws Exception {
     UkcpChannel kcpCh = (UkcpChannel) ctx.channel();
     kcpCh.conv(conv);
-    System.out.println("server.channelActive,channelId=" + kcpCh.id());
+
     User user = new User();
     user.setChannelId(kcpCh.id());
 
-    PoolManager.getInstance().putChannel(kcpCh.id(), ctx);
-    PoolManager.getInstance().putUser(kcpCh.id(), user);
+    PoolManager.get().putChannel(kcpCh.id(), ctx);
+    PoolManager.get().putUser(kcpCh.id(), user);
   }
 
   @Override
   public void channelInactive(ChannelHandlerContext ctx) throws Exception {
     ChannelId id = ctx.channel().id();
-    PoolManager.getInstance().removeChannel(id);
-    User user = PoolManager.getInstance().removeUser(id);
+    PoolManager.get().removeChannel(id);
+    User user = PoolManager.get().removeUser(id);
 
     if (user != null) {
       listener.offline(user);
@@ -43,15 +44,15 @@ public class KcpRttServerHandler extends ChannelInboundHandlerAdapter {
   public void channelRead(ChannelHandlerContext ctx, Object msg) {
     ByteBuf buf = (ByteBuf) msg;
     CharSequence str = buf.getCharSequence(0, buf.capacity(), StandardCharsets.UTF_8);
-    User user = PoolManager.getInstance().getUser(ctx.channel().id());
-    listener.onReadCommand(user, str);
+    User user = PoolManager.get().getUser(ctx.channel().id());
+    listener.onReadCommand(user, str.toString());
     buf.release();
   }
 
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
     // Close the connection when an exception is raised.
-    System.out.println("server.exceptionCaught,ctx=" + ctx);
+    System.out.println("server.exceptionCaught,ctx=" + ctx + ",\n" + Debug.get().toString(cause));
     ctx.close();
   }
 }
