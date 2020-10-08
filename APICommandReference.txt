@@ -22,12 +22,21 @@ message : 失敗原因
 
 ----------------------------------
 ----------------------------------
-通知user加入的遊戲房id
+通知user加入的遊戲房id、及遊戲房全部玩家資訊
 {
   "code": 300,
-  "roomId": "3b1848b0-fad0-4967-824a-ac9540f49be7"
+  "roomId": "3b1848b0-fad0-4967-824a-ac9540f49be7",
+  "position": 0,
+  "users": [
+    {
+      "position": 0,
+      "name": "user1"
+    }
+  ]
 }
 roomId : 遊戲房id
+position : 玩家所在位置
+users : 玩家位置及名稱
 ----------------------------------
 ----------------------------------
 
@@ -43,7 +52,6 @@ roomId : 遊戲房id
 發送client遊戲操作
 {
   "code": 411,
-  "roomId": "3b1848b0-fad0-4967-824a-ac9540f49be7",
   "operation": {
     "event": 2,
     "style": false
@@ -65,7 +73,7 @@ operation : 遊戲操作
 server轉發玩家遊戲操作
 {
   "code": 412,
-  "roomId": "3b1848b0-fad0-4967-824a-ac9540f49be7",
+  "position": 0,
   "operation": {
     "event": 2,
     "style": false

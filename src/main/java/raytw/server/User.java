@@ -4,8 +4,9 @@ import io.netty.channel.ChannelId;
 
 public class User {
   private ChannelId channelId;
-  private String roomId;
   private String name = "";
+  private String roomId;
+  private int position;
 
   public ChannelId getChannelId() {
     return this.channelId;
@@ -13,6 +14,14 @@ public class User {
 
   public void setChannelId(ChannelId channelId) {
     this.channelId = channelId;
+  }
+
+  public String getName() {
+    return this.name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 
   public void setRoomId(String roomId) {
@@ -23,12 +32,12 @@ public class User {
     return roomId;
   }
 
-  public String getName() {
-    return this.name;
+  public void setPosition(int position) {
+    this.position = position;
   }
 
-  public void setName(String name) {
-    this.name = name;
+  public int getPosition() {
+    return position;
   }
 
   @Override

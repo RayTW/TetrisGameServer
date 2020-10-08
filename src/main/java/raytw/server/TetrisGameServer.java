@@ -103,7 +103,7 @@ public class TetrisGameServer implements CmdProcListener {
      * }
      */
     if (code == 411) {
-      Room room = roomManager.getRoom(json.getString("roomId"));
+      Room room = roomManager.getRoom(user.getRoomId());
 
       if (room != null) {
         room.boradcastKeyCode(user, json.getJSONObject("operation"));

@@ -4,6 +4,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 import raytw.server.PoolManager;
 import raytw.server.User;
@@ -64,14 +67,40 @@ public class Room {
    */
   public boolean addUser(User user) {
     if (users.add(user)) {
+      user.setPosition(users.indexOf(user));
+
       JSONObject json = new JSONObject();
 
       json.put("code", 300);
       json.put("roomId", id);
+      json.put("position", user.getPosition());
+      JSONArray ary = new JSONArray();
+
+      IntStream.range(0, users.size())
+          .forEach(
+              idx -> {
+                User u = users.get(idx);
+                JSONObject userInfo = new JSONObject();
+
+                userInfo.put("position", idx);
+                userInfo.put("name", u.getName());
+
+                ary.put(userInfo);
+              });
+
+      json.put("users", ary);
+
       /*
        * {
        *   "code": 300,
-       *   "roomId": "3b1848b0-fad0-4967-824a-ac9540f49be7"
+       *   "roomId": "3b1848b0-fad0-4967-824a-ac9540f49be7",
+       *   "position": 0,
+       *   "users": [
+       *       {
+       *         "position": 0,
+       *         "name": "user1"
+       *       }
+       *    ]
        * }
        */
       PoolManager.get().write(json, user);
@@ -88,7 +117,7 @@ public class Room {
 
       json.put("code", 400);
       json.put("message", "game start");
-      
+
       PoolManager.get().write(json, users);
     }
     if (state == RoomState.INIT || state == RoomState.RUNNING) {
@@ -113,7 +142,7 @@ public class Room {
     JSONObject json = new JSONObject();
 
     json.put("code", 412);
-    json.put("roomId", id);
+    json.put("position", user.getPosition());
     json.put("operation", operation);
 
     /*
