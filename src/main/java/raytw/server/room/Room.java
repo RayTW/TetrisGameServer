@@ -70,7 +70,7 @@ public class Room {
       json.put("roomId", id);
       /*
        * {
-       *   "code": 500,
+       *   "code": 300,
        *   "roomId": "3b1848b0-fad0-4967-824a-ac9540f49be7"
        * }
        */
@@ -88,12 +88,7 @@ public class Room {
 
       json.put("code", 400);
       json.put("message", "game start");
-      /*
-       * {
-       *   "code": 500,
-       *   "roomId": "3b1848b0-fad0-4967-824a-ac9540f49be7"
-       * }
-       */
+      
       PoolManager.get().write(json, users);
     }
     if (state == RoomState.INIT || state == RoomState.RUNNING) {
